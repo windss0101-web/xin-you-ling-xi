@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#11182b">
+<title>心有灵犀｜双人默契挑战</title>
+<style>
+:root{
+  --bg:#10172a;--panel:#19233b;--panel2:#222f4d;--line:rgba(255,255,255,.1);
+  --text:#f5f7ff;--muted:#aab6d2;--blue:#91baff;--purple:#d0a7ff;
+  --mint:#8ce5ca;--pink:#ff9eb6;--shadow:0 24px 70px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;color:var(--text);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:
+    radial-gradient(ellipse at 15% 8%,rgba(93,126,210,.2),transparent 38%),
+    radial-gradient(ellipse at 88% 90%,rgba(159,104,203,.16),transparent 36%),var(--bg);
+  display:flex;align-items:center;justify-content:center;padding:24px 14px;
+}
+button,input{font:inherit}
+button{cursor:pointer}
+.shell{width:min(100%,560px);margin:auto}
+.brand{display:flex;align-items:center;justify-content:center;gap:9px;color:#dce6ff;font-size:13px;letter-spacing:2px;margin-bottom:17px}
+.brand-mark{width:27px;height:27px;border-radius:9px;background:linear-gradient(135deg,#8bbaff,#c8a4ff);display:grid;place-items:center;color:#14203a;font-weight:900;letter-spacing:0}
+.card{
+  border:1px solid var(--line);border-radius:26px;padding:clamp(22px,5vw,36px);
+  background:linear-gradient(150deg,rgba(31,43,70,.97),rgba(22,31,53,.98));box-shadow:var(--shadow);
+}
+h1{font-size:clamp(34px,8vw,48px);letter-spacing:2px;margin:0;text-align:center;line-height:1.2}
+.subtitle{text-align:center;color:#c2cce3;margin:13px 0 27px;font-size:15px;line-height:1.7}
+.eyebrow{text-align:center;color:var(--blue);font-size:11px;letter-spacing:3px;font-weight:800;margin-bottom:12px}
+.field-label{display:block;font-size:13px;color:#c4cde1;margin:0 0 8px}
+input[type=text]{
+  width:100%;border:1px solid rgba(255,255,255,.14);background:#111a2e;color:white;
+  padding:14px 15px;border-radius:13px;outline:none;transition:.2s;
+}
+input[type=text]:focus{border-color:#91baff;box-shadow:0 0 0 3px rgba(145,186,255,.12)}
+input::placeholder{color:#73809e}
+.btn{
+  border:0;border-radius:14px;padding:14px 18px;font-weight:750;transition:transform .15s,filter .15s;
+}
+.btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.btn:disabled{opacity:.48;cursor:not-allowed;transform:none}
+.btn-primary{width:100%;color:#142039;background:linear-gradient(100deg,#9bc4ff,#c9a8ff);box-shadow:0 9px 26px rgba(137,165,255,.16)}
+.btn-secondary{color:#eaf0ff;background:#344362;border:1px solid rgba(255,255,255,.1)}
+.btn-quiet{color:#c9d5ee;background:transparent;border:1px solid rgba(255,255,255,.16)}
+.actions{display:grid;gap:11px;margin-top:17px}
+.divider{display:flex;align-items:center;gap:12px;color:#7785a4;font-size:12px;margin:19px 0}
+.divider:before,.divider:after{content:"";height:1px;background:var(--line);flex:1}
+.tiny-note{color:#8492b0;text-align:center;font-size:12px;line-height:1.7;margin:18px 0 0}
+.status{
+  display:flex;align-items:center;justify-content:center;gap:8px;color:#c7d3eb;
+  background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:999px;
+  padding:8px 12px;font-size:12px;margin:0 auto 21px;width:fit-content;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:#8ce5ca;box-shadow:0 0 12px rgba(140,229,202,.5)}
+.dot.wait{background:#ffca78;box-shadow:0 0 12px rgba(255,202,120,.4)}
+.room-box{background:#111a2e;border:1px solid var(--line);border-radius:16px;padding:15px;margin:18px 0}
+.room-code{font-size:25px;font-weight:850;letter-spacing:5px;text-align:center;color:#d9e6ff;margin:4px 0 12px}
+.link-row{display:flex;gap:8px}
+.link-text{font-size:11px;color:#9ba9c8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;align-self:center}
+.copy-btn{border:0;border-radius:10px;padding:9px 12px;background:#344362;color:#fff;font-size:12px;font-weight:700;white-space:nowrap}
+.round-line{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.round-pill{border:1px solid rgba(145,186,255,.3);background:rgba(145,186,255,.1);color:#b8d2ff;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:750}
+.player-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 20px}
+.player{
+  min-width:0;background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:18px;
+  padding:17px 10px;text-align:center;
+}
+.avatar{width:39px;height:39px;margin:0 auto 9px;border-radius:14px;display:grid;place-items:center;font-size:18px}
+.avatar.a{background:rgba(145,186,255,.16);color:var(--blue)}
+.avatar.b{background:rgba(208,167,255,.16);color:var(--purple)}
+.player-name{font-size:13px;color:#e6ebf8;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player-hint{font-size:11px;color:#8998b7;margin-top:5px}
+.prompt{font-size:15px;font-weight:700;text-align:center;margin:22px 0 14px}
+.wait-box{text-align:center;background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:17px;padding:22px 14px;margin-top:17px}
+.wait-icon{font-size:29px;margin-bottom:9px}
+.wait-title{font-weight:800;font-size:16px}
+.wait-copy{font-size:12px;color:#a6b4d0;line-height:1.7;margin-top:7px}
+.result{
+  border-radius:18px;padding:20px 14px;text-align:center;margin:17px 0;
+  background:linear-gradient(140deg,rgba(145,186,255,.1),rgba(208,167,255,.1));border:1px solid rgba(255,255,255,.12)
+}
+.result.match{background:linear-gradient(140deg,rgba(140,229,202,.13),rgba(145,186,255,.1));border-color:rgba(140,229,202,.35)}
+.result-icon{font-size:35px;margin-bottom:6px}
+.result-title{font-size:22px;font-weight:900}
+.result-sub{font-size:12px;color:#b4c0d9;margin-top:7px}
+.word-reveal{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0}
+.word-card{background:#111a2e;border:1px solid var(--line);border-radius:13px;padding:13px 8px;min-width:0}
+.word-label{font-size:11px;color:#8f9fbe;margin-bottom:7px}
+.word-value{font-size:19px;font-weight:850;overflow-wrap:anywhere;color:#fff}
+.ready-status{font-size:12px;color:#aebbd5;text-align:center;margin:12px 0}
+.error{color:#ffb1bf;background:rgba(255,100,130,.09);border:1px solid rgba(255,100,130,.2);padding:11px 13px;border-radius:12px;font-size:12px;line-height:1.6;margin-top:13px}
+.hidden{display:none!important}
+.footer{text-align:center;color:#687795;font-size:11px;margin-top:16px;line-height:1.7}
+@media(max-width:390px){.card{padding:22px 17px}.player-grid{gap:8px}.player{padding:14px 7px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="brand"><span class="brand-mark">✦</span> TWO PEOPLE · ONE ANSWER</div>
+  <main class="card" id="app" aria-live="polite"></main>
+  <div class="footer">心有灵犀 · 双人默契挑战<br>两个人的答案，只有提交之后才会揭晓。</div>
+</div>
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<script>
+(() => {
+  const app = document.getElementById('app');
+  const params = new URLSearchParams(location.search);
+  const roomFromUrl = params.get('room');
+  let peer = null, conn = null, role = null, roomCode = '';
+  let playerName = '', opponentName = '等待加入', connected = false;
+  let currentRound = 1, myWord = '', submissions = {p1:null,p2:null};
+  let roundResult = null, hostReady = false, guestReady = false;
+  let errorMessage = '';
+
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[ch]));
+  const normalizeWord = value => String(value).normalize('NFKC').trim().toLocaleLowerCase().replace(/\s+/g,' ');
+  const randomRoom = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let out = '';
+    for(let i=0;i<8;i++) out += chars[Math.floor(Math.random()*chars.length)];
+    return out;
+  };
+  const send = data => {
+    if(conn && conn.open) conn.send(data);
+  };
+  const setError = message => { errorMessage = message || ''; };
+  const errorHtml = () => errorMessage ? `<div class="error">${esc(errorMessage)}</div>` : '';
+
+  function renderHome() {
+    const joining = Boolean(roomFromUrl);
+    app.innerHTML = `
+      <div class="eyebrow">A LITTLE GAME FOR TWO</div>
+      <h1>心有灵犀</h1>
+      <p class="subtitle">不用商量，看看我们有多默契。<br>选一个词，等对方给出同样的答案。</p>
+      <div class="status"><span class="dot"></span>${joining ? '你收到了一份默契挑战' : '邀请一个人，开始默契挑战'}</div>
+      <label class="field-label" for="playerName">你的昵称</label>
+      <input id="playerName" type="text" maxlength="16" placeholder="例如：玩家 A" value="${joining ? '玩家 B' : '玩家 A'}">
+      ${joining ? `
+        <div class="room-box">
+          <div class="field-label" style="text-align:center">你将加入房间</div>
+          <div class="room-code" style="font-size:22px">${esc(roomFromUrl.toUpperCase())}</div>
+        </div>
+        <div class="actions"><button class="btn btn-primary" id="joinBtn">加入游戏</button></div>
+      ` : `
+        <div class="actions"><button class="btn btn-primary" id="createBtn">创建房间</button></div>
+        <div class="divider">游戏怎么玩</div>
+        <p class="tiny-note">创建房间后，把邀请链接发给另一位玩家。<br>双方各自输入一个词，只有两人都提交后才会揭晓。</p>
+      `}
+      ${errorHtml()}
+    `;
+    const nameInput = document.getElementById('playerName');
+    if(joining) {
+      document.getElementById('joinBtn').addEventListener('click', () => {
+        playerName = nameInput.value.trim() || '玩家 B';
+        joinRoom(roomFromUrl.toUpperCase());
+      });
+    } else {
+      document.getElementById('createBtn').addEventListener('click', () => {
+        playerName = nameInput.value.trim() || '玩家 A';
+        createRoom();
+      });
+    }
+  }
+
+  function renderLobby() {
+    const invite = new URL(location.href);
+    invite.searchParams.set('room', roomCode.toLowerCase());
+    invite.hash = '';
+    app.innerHTML = `
+      <div class="eyebrow">ROOM CREATED</div>
+      <h1 style="font-size:34px">房间已创建</h1>
+      <p class="subtitle">把下面的邀请链接发给对方，等 TA 加入就可以开始啦。</p>
+      <div class="status"><span class="dot wait"></span>等待另一位玩家加入…</div>
+      <div class="room-box">
+        <div class="field-label" style="text-align:center">房间号码</div>
+        <div class="room-code">${esc(roomCode)}</div>
+        <div class="link-row">
+          <div class="link-text" id="inviteText">${esc(invite.toString())}</div>
+          <button class="copy-btn" id="copyInvite">复制链接</button>
+        </div>
+      </div>
+      <p class="tiny-note">请保持这个页面打开。对方加入后，游戏会自动开始。</p>
+      ${errorHtml()}
+    `;
+    document.getElementById('copyInvite').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(invite.toString());
+        document.getElementById('copyInvite').textContent = '已复制 ✓';
+      } catch(e) {
+        const t = document.createElement('textarea');
+        t.value = invite.toString(); document.body.appendChild(t); t.select();
+        document.execCommand('copy'); t.remove();
+        document.getElementById('copyInvite').textContent = '已复制 ✓';
+      }
+    });
+  }
+
+  function renderGame() {
+    const mineLabel = role === 'host' ? '玩家 A' : '玩家 B';
+    const otherLabel = role === 'host' ? '玩家 B' : '玩家 A';
+    const otherSubmitted = role === 'host' ? Boolean(submissions.p2) : Boolean(submissions.p1);
+    let body = '';
+
+    if(roundResult) {
+      const {words, matched} = roundResult;
+      body = `
+        <div class="result ${matched ? 'match' : ''}">
+          <div class="result-icon">${matched ? '🎉' : '🫣'}</div>
+          <div class="result-title">${matched ? '心有灵犀！' : '差一点点！'}</div>
+          <div class="result-sub">${matched ? `你们在第 ${currentRound} 轮成功匹配` : '答案揭晓，准备好迎接下一轮了吗？'}</div>
+        </div>
+        <div class="word-reveal">
+          <div class="word-card"><div class="word-label">${esc(role === 'host' ? playerName : opponentName)} · 玩家 A</div><div class="word-value">${esc(words.p1)}</div></div>
+          <div class="word-card"><div class="word-label">${esc(role === 'guest' ? playerName : opponentName)} · 玩家 B</div><div class="word-value">${esc(words.p2)}</div></div>
+        </div>
+        ${matched ? `
+          <p class="ready-status">你们一共尝试了 ${currentRound} 轮，默契值拉满！</p>
+          ${role === 'host' ? '<button class="btn btn-primary" id="restartBtn">再玩一局</button>' : '<div class="wait-box"><div class="wait-title">通关成功！</div><div class="wait-copy">如果想再玩一局，请等待房主重新开始。</div></div>'}
+        ` : `
+          <p class="ready-status">${hostReady ? '你已准备好' : '点击下方按钮，准备进入下一轮'} · ${guestReady ? '对方已准备' : '等待对方准备'}</p>
+          <button class="btn btn-primary" id="readyBtn" ${((role==='host' && hostReady) || (role==='guest' && guestReady)) ? 'disabled' : ''}>
+            ${((role==='host' && hostReady) || (role==='guest' && guestReady)) ? '已准备，等待对方…' : '我准备好了，下一轮'}
+          </button>
+        `}
+      `;
+    } else if(myWord) {
+      body = `
+        <div class="wait-box">
+          <div class="wait-icon">🔒</div>
+          <div class="wait-title">你的答案已锁定</div>
+          <div class="wait-copy">你提交的词语是「${esc(myWord)}」。<br>${otherSubmitted ? '对方也已提交，正在揭晓答案…' : '正在等待对方提交答案。'}</div>
+        </div>
+      `;
+    } else {
+      body = `
+        <div class="prompt">这一轮，你脑海中想到的词是什么？</div>
+        <form id="wordForm">
+          <input id="wordInput" type="text" maxlength="32" autocomplete="off" placeholder="输入一个词语…" required>
+          <div class="actions"><button class="btn btn-primary" type="submit">提交答案</button></div>
+        </form>
+        <p class="tiny-note">提交后不能修改。双方都提交之前，谁也看不到对方的答案。</p>
+      `;
+    }
+
+    app.innerHTML = `
+      <div class="round-line">
+        <span class="round-pill">第 ${currentRound} 轮</span>
+        <span style="font-size:12px;color:#91a0bd">房间 ${esc(roomCode)}</span>
+      </div>
+      <div class="status"><span class="dot"></span>已连接 · 游戏进行中</div>
+      <div class="player-grid">
+        <div class="player"><div class="avatar a">A</div><div class="player-name">${esc(role==='host' ? playerName : opponentName)}</div><div class="player-hint">${role==='host' ? '你' : '对方'}</div></div>
+        <div class="player"><div class="avatar b">B</div><div class="player-name">${esc(role==='guest' ? playerName : (opponentName || '玩家 B'))}</div><div class="player-hint">${role==='guest' ? '你' : '对方'}</div></div>
+      </div>
+      ${body}
+      ${errorHtml()}
+    `;
+
+    const form = document.getElementById('wordForm');
+    if(form) form.addEventListener('submit', event => {
+      event.preventDefault();
+      const value = document.getElementById('wordInput').value.trim();
+      if(value) submitWord(value);
+    });
+    const readyBtn = document.getElementById('readyBtn');
+    if(readyBtn) readyBtn.addEventListener('click', markReady);
+    const restartBtn = document.getElementById('restartBtn');
+    if(restartBtn) restartBtn.addEventListener('click', restartGame);
+  }
+
+  function createRoom() {
+    if(!window.Peer) { setError('网络组件加载失败，请检查网络后刷新页面重试。'); renderHome(); return; }
+    role = 'host'; roomCode = randomRoom(); currentRound = 1;
+    peer = new Peer('mimatch-' + roomCode.toLowerCase());
+    peer.on('open', () => renderLobby());
+    peer.on('connection', incoming => {
+      if(conn && conn.open) { incoming.close(); return; }
+      conn = incoming;
+      conn.on('open', () => {});
+      conn.on('data', handleHostData);
+      conn.on('close', () => {
+        connected = false; setError('对方已断开连接。请让对方重新打开邀请链接，或重新创建房间。');
+        renderDisconnected();
+      });
+      conn.on('error', () => { setError('连接出现问题，请刷新页面后重新创建房间。'); renderDisconnected(); });
+    });
+    peer.on('error', err => {
+      const msg = err && err.type === 'unavailable-id' ? '房间号码冲突，请返回后重新创建房间。' : '暂时无法建立房间，请检查网络后重试。';
+      setError(msg); renderHome();
+    });
+    renderConnecting('正在创建房间…');
+  }
+
+  function joinRoom(code) {
+    if(!window.Peer) { setError('网络组件加载失败，请检查网络后刷新页面重试。'); renderHome(); return; }
+    role = 'guest'; roomCode = code; currentRound = 1;
+    renderConnecting('正在连接房间…');
+    peer = new Peer();
+    peer.on('open', () => {
+      conn = peer.connect('mimatch-' + roomCode.toLowerCase(), {reliable:true});
+      conn.on('open', () => {
+        send({type:'join', name:playerName});
+      });
+      conn.on('data', handleGuestData);
+      conn.on('close', () => {
+        connected = false; setError('与房主的连接已断开。请重新打开邀请链接。'); renderDisconnected();
+      });
+      conn.on('error', () => { setError('连接失败，请确认房主仍在房间内，然后重试。'); renderDisconnected(); });
+    });
+    peer.on('error', () => {
+      setError('找不到这个房间，或者房主尚未创建成功。请确认邀请链接正确，并让房主保持页面打开。');
+      renderHome();
+    });
+  }
+
+  function renderConnecting(message) {
+    app.innerHTML = `<div class="eyebrow">PLEASE WAIT</div><h1 style="font-size:32px">马上就好</h1><div class="wait-box"><div class="wait-icon">✨</div><div class="wait-title">${esc(message)}</div><div class="wait-copy">正在建立两位玩家之间的连接…</div></div>${errorHtml()}`;
+  }
+
+  function renderDisconnected() {
+    app.innerHTML = `<div class="eyebrow">CONNECTION LOST</div><h1 style="font-size:32px">连接中断</h1><p class="subtitle">这局游戏暂时无法继续。</p><div class="wait-box"><div class="wait-icon">📡</div><div class="wait-title">请重新连接</div><div class="wait-copy">${esc(errorMessage)}</div></div><div class="actions"><button class="btn btn-secondary" id="backBtn">返回首页</button></div>`;
+    document.getElementById('backBtn').addEventListener('click', () => { location.href = location.pathname; });
+  }
+
+  function handleHostData(data) {
+    if(!data || !data.type) return;
+    if(data.type === 'join') {
+      opponentName = String(data.name || '玩家 B').slice(0,16);
+      connected = true;
+      send({type:'welcome', opponentName:playerName, round:currentRound});
+      renderGame();
+      return;
+    }
+    if(data.type === 'submit' && data.round === currentRound && !roundResult) {
+      if(!submissions.p2) submissions.p2 = String(data.word || '').slice(0,32);
+      broadcastProgress();
+      resolveRound();
+    }
+    if(data.type === 'ready') {
+      guestReady = true;
+      send({type:'readyStatus', hostReady, guestReady});
+      if(hostReady && guestReady) startNextRound();
+      else renderGame();
+    }
+  }
+
+  function handleGuestData(data) {
+    if(!data || !data.type) return;
+    if(data.type === 'welcome') {
+      connected = true;
+      opponentName = String(data.opponentName || '玩家 A').slice(0,16);
+      currentRound = data.round || 1;
+      renderGame();
+    }
+    if(data.type === 'progress') {
+      submissions.p1 = data.submitted && data.submitted.p1 ? 'submitted' : null;
+      renderGame();
+    }
+    if(data.type === 'result') {
+      currentRound = data.round;
+      roundResult = {words:data.words, matched:data.matched};
+      renderGame();
+    }
+    if(data.type === 'readyStatus') {
+      hostReady = Boolean(data.hostReady); guestReady = Boolean(data.guestReady); renderGame();
+    }
+    if(data.type === 'roundStart') {
+      currentRound = data.round; myWord = ''; submissions = {p1:null,p2:null};
+      roundResult = null; hostReady = false; guestReady = false; renderGame();
+    }
+    if(data.type === 'restart') {
+      currentRound = 1; myWord = ''; submissions = {p1:null,p2:null};
+      roundResult = null; hostReady = false; guestReady = false; renderGame();
+    }
+  }
+
+  function broadcastProgress() {
+    send({type:'progress', submitted:{p1:Boolean(submissions.p1),p2:Boolean(submissions.p2)}});
+  }
+
+  function submitWord(word) {
+    myWord = word;
+    if(role === 'host') {
+      submissions.p1 = word;
+      broadcastProgress();
+      resolveRound();
+    } else {
+      send({type:'submit', round:currentRound, word});
+      renderGame();
+    }
+  }
+
+  function resolveRound() {
+    if(!submissions.p1 || !submissions.p2 || roundResult) { renderGame(); return; }
+    const matched = normalizeWord(submissions.p1) === normalizeWord(submissions.p2);
+    roundResult = {words:{p1:submissions.p1,p2:submissions.p2}, matched};
+    send({type:'result', round:currentRound, words:roundResult.words, matched});
+    renderGame();
+  }
+
+  function markReady() {
+    if(role === 'host') {
+      hostReady = true;
+      send({type:'readyStatus', hostReady, guestReady});
+      if(hostReady && guestReady) startNextRound();
+      else renderGame();
+    } else {
+      guestReady = true;
+      send({type:'ready'});
+      renderGame();
+    }
+  }
+
+  function startNextRound() {
+    currentRound += 1; myWord = ''; submissions = {p1:null,p2:null};
+    roundResult = null; hostReady = false; guestReady = false;
+    send({type:'roundStart', round:currentRound});
+    renderGame();
+  }
+
+  function restartGame() {
+    currentRound = 1; myWord = ''; submissions = {p1:null,p2:null};
+    roundResult = null; hostReady = false; guestReady = false;
+    send({type:'restart'});
+    renderGame();
+  }
+
+  renderHome();
+})();
+</script>
+</body>
+</html>
