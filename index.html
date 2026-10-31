@@ -93,6 +93,20 @@ input::placeholder{color:#73809e}
 .word-label{font-size:11px;color:#8f9fbe;margin-bottom:7px}
 .word-value{font-size:19px;font-weight:850;overflow-wrap:anywhere;color:#fff}
 .ready-status{font-size:12px;color:#aebbd5;text-align:center;margin:12px 0}
+.history{margin:20px 0 8px;text-align:left}
+.history-title{font-size:14px;font-weight:850;color:#e9efff;margin:0 0 11px}
+.history-list{display:grid;gap:10px}
+.history-item{background:#111a2e;border:1px solid var(--line);border-radius:14px;padding:12px}
+.history-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.history-round{font-size:12px;font-weight:800;color:#cbd8f3}
+.history-tag{font-size:10px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.08);color:#b8c6e2}
+.history-tag.match{background:rgba(140,229,202,.13);color:#9cebd2}
+.history-tag.partial{background:rgba(255,202,120,.12);color:#ffd28a}
+.history-words{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.history-word{min-width:0;background:rgba(255,255,255,.045);border-radius:10px;padding:9px}
+.history-word small{display:block;font-size:10px;color:#8f9fbe;margin-bottom:5px}
+.history-word strong{display:block;font-size:14px;color:#f5f7ff;overflow-wrap:anywhere}
+.history-empty{font-size:12px;line-height:1.7;color:#9ba9c8;background:rgba(255,255,255,.04);padding:13px;border-radius:12px;text-align:center}
 .error{color:#ffb1bf;background:rgba(255,100,130,.09);border:1px solid rgba(255,100,130,.2);padding:11px 13px;border-radius:12px;font-size:12px;line-height:1.6;margin-top:13px}
 .hidden{display:none!important}
 .footer{text-align:center;color:#687795;font-size:11px;margin-top:16px;line-height:1.7}
@@ -103,7 +117,7 @@ input::placeholder{color:#73809e}
 <div class="shell">
   <div class="brand"><span class="brand-mark">✦</span> TWO PEOPLE · ONE ANSWER</div>
   <main class="card" id="app" aria-live="polite"></main>
-  <div class="footer">心有灵犀 · 双人默契挑战<br>两个人的答案，只有提交之后才会揭晓。</div>
+  <div class="footer">心有灵犀 · 双人默契挑战<br>答案提交后才会揭晓 · 可随时结束并查看本局记录。</div>
 </div>
 <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
 <script>
@@ -115,6 +129,7 @@ input::placeholder{color:#73809e}
   let playerName = '', opponentName = '等待加入', connected = false;
   let currentRound = 1, myWord = '', submissions = {p1:null,p2:null};
   let roundResult = null, hostReady = false, guestReady = false;
+  let roundHistory = [], isStopped = false, stopPending = false;
   let errorMessage = '';
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -132,6 +147,28 @@ input::placeholder{color:#73809e}
   };
   const setError = message => { errorMessage = message || ''; };
   const errorHtml = () => errorMessage ? `<div class="error">${esc(errorMessage)}</div>` : '';
+
+  function renderHistory() {
+    if(!roundHistory.length) {
+      return `<section class="history"><div class="history-title">本局填词记录</div><div class="history-empty">本局还没有已提交的词语。</div></section>`;
+    }
+    const rows = roundHistory.map(item => {
+      const tag = item.partial ? '中途结束' : (item.matched ? '匹配成功' : '未匹配');
+      const tagClass = item.partial ? 'partial' : (item.matched ? 'match' : '');
+      return `
+        <div class="history-item">
+          <div class="history-top">
+            <span class="history-round">第 ${esc(item.round)} 轮</span>
+            <span class="history-tag ${tagClass}">${tag}</span>
+          </div>
+          <div class="history-words">
+            <div class="history-word"><small>玩家 A</small><strong>${esc(item.p1 || '未提交')}</strong></div>
+            <div class="history-word"><small>玩家 B</small><strong>${esc(item.p2 || '未提交')}</strong></div>
+          </div>
+        </div>`;
+    }).join('');
+    return `<section class="history"><div class="history-title">本局完整填词记录</div><div class="history-list">${rows}</div></section>`;
+  }
 
   function renderHome() {
     const joining = Boolean(roomFromUrl);
@@ -203,12 +240,23 @@ input::placeholder{color:#73809e}
   }
 
   function renderGame() {
-    const mineLabel = role === 'host' ? '玩家 A' : '玩家 B';
-    const otherLabel = role === 'host' ? '玩家 B' : '玩家 A';
     const otherSubmitted = role === 'host' ? Boolean(submissions.p2) : Boolean(submissions.p1);
     let body = '';
 
-    if(roundResult) {
+    if(isStopped) {
+      body = `
+        <div class="result">
+          <div class="result-icon">🛑</div>
+          <div class="result-title">挑战已结束</div>
+          <div class="result-sub">本局共记录 ${roundHistory.length} 轮</div>
+        </div>
+        ${renderHistory()}
+        <p class="ready-status">本局已经结束，所有已提交的词语都已记录。</p>
+        ${role === 'host'
+          ? '<button class="btn btn-primary" id="restartBtn">重新开始挑战</button>'
+          : '<div class="wait-box"><div class="wait-title">本局已结束</div><div class="wait-copy">如需再玩一局，请等待房主重新开始。</div></div>'}
+      `;
+    } else if(roundResult) {
       const {words, matched} = roundResult;
       body = `
         <div class="result ${matched ? 'match' : ''}">
@@ -222,7 +270,8 @@ input::placeholder{color:#73809e}
         </div>
         ${matched ? `
           <p class="ready-status">你们一共尝试了 ${currentRound} 轮，默契值拉满！</p>
-          ${role === 'host' ? '<button class="btn btn-primary" id="restartBtn">再玩一局</button>' : '<div class="wait-box"><div class="wait-title">通关成功！</div><div class="wait-copy">如果想再玩一局，请等待房主重新开始。</div></div>'}
+          ${renderHistory()}
+          ${role === 'host' ? '<button class="btn btn-primary" id="restartBtn">再玩一局</button>' : '<div class="wait-box"><div class="wait-title">通关成功！</div><div class="wait-copy">完整填词记录已展示。如果想再玩一局，请等待房主重新开始。</div></div>'}
         ` : `
           <p class="ready-status">${hostReady ? '你已准备好' : '点击下方按钮，准备进入下一轮'} · ${guestReady ? '对方已准备' : '等待对方准备'}</p>
           <button class="btn btn-primary" id="readyBtn" ${((role==='host' && hostReady) || (role==='guest' && guestReady)) ? 'disabled' : ''}>
@@ -249,17 +298,23 @@ input::placeholder{color:#73809e}
       `;
     }
 
+    const canStop = !isStopped && !(roundResult && roundResult.matched);
     app.innerHTML = `
       <div class="round-line">
         <span class="round-pill">第 ${currentRound} 轮</span>
         <span style="font-size:12px;color:#91a0bd">房间 ${esc(roomCode)}</span>
       </div>
-      <div class="status"><span class="dot"></span>已连接 · 游戏进行中</div>
+      <div class="status"><span class="dot"></span>已连接 · ${isStopped ? '挑战已结束' : '游戏进行中'}</div>
       <div class="player-grid">
         <div class="player"><div class="avatar a">A</div><div class="player-name">${esc(role==='host' ? playerName : opponentName)}</div><div class="player-hint">${role==='host' ? '你' : '对方'}</div></div>
         <div class="player"><div class="avatar b">B</div><div class="player-name">${esc(role==='guest' ? playerName : (opponentName || '玩家 B'))}</div><div class="player-hint">${role==='guest' ? '你' : '对方'}</div></div>
       </div>
       ${body}
+      ${canStop ? `
+        <div class="actions">
+          <button class="btn btn-quiet" id="stopBtn" ${stopPending ? 'disabled' : ''}>${stopPending ? '正在请求结束…' : '结束挑战并查看记录'}</button>
+        </div>
+      ` : ''}
       ${errorHtml()}
     `;
 
@@ -273,11 +328,15 @@ input::placeholder{color:#73809e}
     if(readyBtn) readyBtn.addEventListener('click', markReady);
     const restartBtn = document.getElementById('restartBtn');
     if(restartBtn) restartBtn.addEventListener('click', restartGame);
+    const stopBtn = document.getElementById('stopBtn');
+    if(stopBtn) stopBtn.addEventListener('click', requestStop);
   }
-
   function createRoom() {
     if(!window.Peer) { setError('网络组件加载失败，请检查网络后刷新页面重试。'); renderHome(); return; }
     role = 'host'; roomCode = randomRoom(); currentRound = 1;
+    myWord = ''; submissions = {p1:null,p2:null}; roundResult = null;
+    roundHistory = []; isStopped = false; stopPending = false;
+    hostReady = false; guestReady = false;
     peer = new Peer('mimatch-' + roomCode.toLowerCase());
     peer.on('open', () => renderLobby());
     peer.on('connection', incoming => {
@@ -301,6 +360,9 @@ input::placeholder{color:#73809e}
   function joinRoom(code) {
     if(!window.Peer) { setError('网络组件加载失败，请检查网络后刷新页面重试。'); renderHome(); return; }
     role = 'guest'; roomCode = code; currentRound = 1;
+    myWord = ''; submissions = {p1:null,p2:null}; roundResult = null;
+    roundHistory = []; isStopped = false; stopPending = false;
+    hostReady = false; guestReady = false;
     renderConnecting('正在连接房间…');
     peer = new Peer();
     peer.on('open', () => {
@@ -338,12 +400,16 @@ input::placeholder{color:#73809e}
       renderGame();
       return;
     }
-    if(data.type === 'submit' && data.round === currentRound && !roundResult) {
+    if(data.type === 'submit' && data.round === currentRound && !roundResult && !isStopped) {
       if(!submissions.p2) submissions.p2 = String(data.word || '').slice(0,32);
       broadcastProgress();
       resolveRound();
     }
-    if(data.type === 'ready') {
+    if(data.type === 'stopRequest') {
+      stopGame();
+      return;
+    }
+    if(data.type === 'ready' && !isStopped && !(roundResult && roundResult.matched)) {
       guestReady = true;
       send({type:'readyStatus', hostReady, guestReady});
       if(hostReady && guestReady) startNextRound();
@@ -366,6 +432,13 @@ input::placeholder{color:#73809e}
     if(data.type === 'result') {
       currentRound = data.round;
       roundResult = {words:data.words, matched:data.matched};
+      if(Array.isArray(data.history)) roundHistory = data.history;
+      else roundHistory.push({round:data.round,p1:data.words.p1,p2:data.words.p2,matched:data.matched});
+      renderGame();
+    }
+    if(data.type === 'stopped') {
+      if(Array.isArray(data.history)) roundHistory = data.history;
+      isStopped = true; stopPending = false; roundResult = null; myWord = '';
       renderGame();
     }
     if(data.type === 'readyStatus') {
@@ -373,11 +446,13 @@ input::placeholder{color:#73809e}
     }
     if(data.type === 'roundStart') {
       currentRound = data.round; myWord = ''; submissions = {p1:null,p2:null};
-      roundResult = null; hostReady = false; guestReady = false; renderGame();
+      roundResult = null; isStopped = false; stopPending = false;
+      hostReady = false; guestReady = false; renderGame();
     }
     if(data.type === 'restart') {
       currentRound = 1; myWord = ''; submissions = {p1:null,p2:null};
-      roundResult = null; hostReady = false; guestReady = false; renderGame();
+      roundResult = null; roundHistory = []; isStopped = false; stopPending = false;
+      hostReady = false; guestReady = false; renderGame();
     }
   }
 
@@ -401,11 +476,44 @@ input::placeholder{color:#73809e}
     if(!submissions.p1 || !submissions.p2 || roundResult) { renderGame(); return; }
     const matched = normalizeWord(submissions.p1) === normalizeWord(submissions.p2);
     roundResult = {words:{p1:submissions.p1,p2:submissions.p2}, matched};
-    send({type:'result', round:currentRound, words:roundResult.words, matched});
+    roundHistory.push({round:currentRound,p1:submissions.p1,p2:submissions.p2,matched});
+    send({type:'result', round:currentRound, words:roundResult.words, matched, history:roundHistory});
+    renderGame();
+  }
+
+  function requestStop() {
+    if(stopPending || isStopped) return;
+    if(role === 'host') {
+      stopGame();
+    } else {
+      stopPending = true;
+      send({type:'stopRequest'});
+      renderGame();
+    }
+  }
+
+  function stopGame() {
+    if(isStopped || (roundResult && roundResult.matched)) return;
+    if(!roundResult && (submissions.p1 || submissions.p2)) {
+      const alreadyRecorded = roundHistory.some(item => item.round === currentRound);
+      if(!alreadyRecorded) {
+        roundHistory.push({
+          round:currentRound,
+          p1:submissions.p1 || '未提交',
+          p2:submissions.p2 || '未提交',
+          matched:false,
+          partial:true
+        });
+      }
+    }
+    isStopped = true;
+    stopPending = false;
+    send({type:'stopped', round:currentRound, history:roundHistory});
     renderGame();
   }
 
   function markReady() {
+    if(isStopped || (roundResult && roundResult.matched)) return;
     if(role === 'host') {
       hostReady = true;
       send({type:'readyStatus', hostReady, guestReady});
@@ -419,6 +527,7 @@ input::placeholder{color:#73809e}
   }
 
   function startNextRound() {
+    if(isStopped || (roundResult && roundResult.matched)) return;
     currentRound += 1; myWord = ''; submissions = {p1:null,p2:null};
     roundResult = null; hostReady = false; guestReady = false;
     send({type:'roundStart', round:currentRound});
@@ -427,7 +536,8 @@ input::placeholder{color:#73809e}
 
   function restartGame() {
     currentRound = 1; myWord = ''; submissions = {p1:null,p2:null};
-    roundResult = null; hostReady = false; guestReady = false;
+    roundResult = null; roundHistory = []; isStopped = false; stopPending = false;
+    hostReady = false; guestReady = false;
     send({type:'restart'});
     renderGame();
   }
